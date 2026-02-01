@@ -34,8 +34,15 @@ async def scheduled_scraping(laptops: LaptopBase, config: ConfigManager, bot: Bo
             if success:
                 logging.info("Скрапінг успішний. Аналізуємо дані...")
                 await asyncio.to_thread(find_hot_deals)
-                
+
                 laptops.update()
+                
+                if not laptops.df.empty and 'is_new' in laptops.df.columns:
+                    laptops.df = laptops.df.sort_values(by='is_new', ascending=False)
+                    laptops.df.reset_index(drop=True, inplace=True)
+                    logging.info("Дані відсортовані: нові оголошення вгорі.")
+
+                logging.info(f"Серед них нових: {len(laptops.df[laptops.df['is_new']==True])}!")
                 
                 await notify_users_new_deals(bot, config, laptops)
             else:

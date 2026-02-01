@@ -2,6 +2,7 @@ import pandas as pd
 from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Union
+import logging
 
 @dataclass
 class LaptopItem:
@@ -71,33 +72,65 @@ class LaptopBase:
     def update(self):
         try:
             new_bd = self.load()
+
             if new_bd.empty:
                 return
+            if self.df.empty:
+                self.df = new_bd
+                self.save()
+                return 
+            
+            self.df.drop_duplicates(subset=['id'], keep='first', inplace=True)
+            new_bd.drop_duplicates(subset=['id'], keep='first', inplace=True)
 
-            missing_cols = [col for col in self.df.columns if col not in new_bd.columns]
-            for col in missing_cols:
-                new_bd[col] = "" 
+            self.df['id'] = self.df['id'].astype(str)
+            new_bd['id'] = new_bd['id'].astype(str)
 
             self.df.set_index('id', inplace=True)
             new_bd.set_index('id', inplace=True)
 
-            new_bd.update(self.df)
+            if 'spam' in self.df.columns and 'spam' in new_bd.columns:
+                new_bd.update(self.df[['spam']])
+            
+            if 'is_new' in self.df.columns and 'is_new' in new_bd.columns:
+                new_bd.update(self.df[['is_new']])
 
-            new_bd = new_bd.reset_index()
-            self.df = new_bd.copy()
+            new_bd.reset_index(inplace=True)
 
+            self.df = new_bd
             self.save()
+
+            logging.info(f"База даних успішно оновлена.")
             
         except Exception as e:
-            print(f"Помилка оновлення бази: {e}")
+            logging.error(f"Помилка оновлення бази: {e}",exc_info=True)
+            if 'id' not in self.df.columns: 
+                 self.df.reset_index(inplace=True)
 
 
-    def ignore_spam(self):
+    def get_valid_index(self, index: int, direction: int = 1) -> int:
         try:
-            self.df = self.df[~self.df['spam']]
-            self.df = self.df.reset_index(drop=True)
+            if self.df.empty:
+                return 0
+            
+            max_idx = len(self.df) - 1
+
+            curr = max(0,min(index,max_idx))
+
+            while 0 <= curr <= max_idx:
+                if not self.df.iloc[curr].get('spam',True):
+                    return curr
+                curr += direction
+
+            for i in range(max_idx)[::direction]:
+                if not self.df.iloc[i].get('spam',False):
+                    return i
+                   
+            return 0
+            
         except:
-            pass
+            return 0
+        
 
     def add_to_spam(self, index: int):
         try:

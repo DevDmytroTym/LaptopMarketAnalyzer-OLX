@@ -83,7 +83,5 @@ class ConfigManager:
         self.data[name_setting].difference_update(set(elements))
         self.save()
 
-    
-
 
   

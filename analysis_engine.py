@@ -47,14 +47,15 @@ def find_hot_deals():
         hot_deals = target_data[target_data['deal_score'].between(min_discont, max_dictont)].copy()
         
         hot_deals.loc[:, "is_new"] = True
-        hot_deals = hot_deals.sort_values(by=['deal_score','is_new'], ascending=False)
+        hot_deals = hot_deals.sort_values(by=['deal_score','category'], ascending=False)
 
-        hot_deals.reset_index(drop=True,inplace=True)
+        hot_deals.reset_index(drop=True, inplace=True)
         hot_deals.to_csv('data/hot_deals.csv', index=False)
         logging.info(f"Знайдено {len(hot_deals[hot_deals['is_new']==True])} гарячих пропозицій!")
         return hot_deals
         
     except Exception as e:
+
         logging.error(f"Помилка аналізу: {e}")
 
 find_hot_deals()

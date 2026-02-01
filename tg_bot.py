@@ -103,6 +103,7 @@ async def show_laptop_card(message: types.Message, index: int, laptops: LaptopBa
             await message.answer("😔 На жаль, зараз немає вигідних пропозицій.", reply_markup=builder.as_markup())
             return
 
+        index = laptops.get_valid_index(index,-1)
         photo, caption, markup = get_laptops_menu(index, laptops)
         await message.answer_photo(photo=photo, caption=caption, reply_markup=markup, parse_mode="HTML")
     except Exception as e:
@@ -117,7 +118,9 @@ async def cmd_laptop(message: types.Message, laptops: LaptopBase) -> None:
     """
     try:
         laptops.update()
-        await show_laptop_card(message, 0, laptops)
+        direction = 1
+        index = laptops.get_valid_index(0,direction)
+        await show_laptop_card(message, index, laptops)
     except Exception as e:
         logging.error(f"Помилка в cmd_laptop: {e}")
 
@@ -129,7 +132,10 @@ async def press_navigation(callback: types.CallbackQuery, laptops: LaptopBase):
     Обробляє кнопки "Назад" та "Вперед", оновлюючи поточне повідомлення (медіа та текст).
     """
     try:
-        index = int(callback.data.split(':')[1])
+        action, cur_index = callback.data.split(':')
+        direction = 1 if action == "next" else -1
+        index = laptops.get_valid_index(int(cur_index),direction)
+
         photo, caption, markup = get_laptops_menu(index, laptops)
         media = InputMediaPhoto(media=photo, caption=caption, parse_mode="HTML")
         
@@ -197,7 +203,6 @@ async def add_to_spam(callback: types.CallbackQuery, laptops: LaptopBase) -> Non
 
         laptops.add_to_spam(index)
         laptops.save()
-        laptops.ignore_spam() 
 
         if len(laptops) == 0:
             builder = InlineKeyboardBuilder()
@@ -212,7 +217,8 @@ async def add_to_spam(callback: types.CallbackQuery, laptops: LaptopBase) -> Non
         await asyncio.sleep(3) 
 
     
-        new_index = min(index, len(laptops) - 1)
+        new_index = laptops.get_valid_index(index,-1)
+
         photo, caption, markup = get_laptops_menu(new_index, laptops)
         await callback.message.answer_photo(photo=photo, caption=caption, reply_markup=markup, parse_mode="HTML")
         await callback.message.delete()
@@ -221,6 +227,7 @@ async def add_to_spam(callback: types.CallbackQuery, laptops: LaptopBase) -> Non
         logging.error(f"Помилка при додаванні в спам: {e}")
         await callback.answer("⚠️ Помилка при спробі видалити оголошення.")
 
+
 @dp.callback_query(F.data == "view_new_data")
 async def press_new_data(callback: types.CallbackQuery, laptops: LaptopBase):
     """
@@ -228,7 +235,6 @@ async def press_new_data(callback: types.CallbackQuery, laptops: LaptopBase):
     """
     try:
         laptops.update()
-        laptops.ignore_spam()
 
         if len(laptops) == 0:
             await callback.answer("Нічого нового не знайдено 😔", show_alert=True)
@@ -462,12 +468,20 @@ async def process_scan(callback: types.CallbackQuery, laptops: LaptopBase) -> No
 
         if success:
             await asyncio.to_thread(find_hot_deals)
-            laptops.reload()
-            laptops.ignore_spam()
+            
+            laptops.update()
+                
+            if not laptops.df.empty and 'is_new' in laptops.df.columns:
+                laptops.df = laptops.df.sort_values(by='is_new', ascending=False)
+                laptops.df.reset_index(drop=True, inplace=True)
+                logging.info("Дані відсортовані: нові оголошення вгорі.")
+
+            logging.info(f"Серед них нових: {len(laptops.df[laptops.df['is_new']==True])}!")
             
             if len(laptops) > 0:
+                index = laptops.get_valid_index(0)
                 await callback.message.delete()
-                await show_laptop_card(callback.message, 0, laptops)
+                await show_laptop_card(callback.message, index, laptops)
             else:
                 await callback.message.edit_text("✅ Сканування завершено, але нових вигідних пропозицій поки немає.")
         else:

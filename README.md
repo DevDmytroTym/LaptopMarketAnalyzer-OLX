@@ -16,6 +16,14 @@ This project is a fault-tolerant ETL tool designed to monitor the used laptop ma
     * Manage blacklists to filter out spam (e.g., "broken", "parts only").
     * Adjust profitability thresholds and scan intervals on the fly.
 
+## 📱 Interface & Demo
+
+To provide the best user experience, the bot features a clean interface and detailed deal analysis.
+
+| Main Bot Menu | Hot Deal Notification |
+| :---: | :---: |
+| ![Bot Menu](assets/bot_menu.png) | ![Hot Deal Example](assets/deal_example.jpg) |
+
 ## 🛠 Tech Stack
 
 * **Core:** Python 3.13

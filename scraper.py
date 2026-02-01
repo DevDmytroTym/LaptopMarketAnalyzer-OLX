@@ -334,13 +334,23 @@ def cleaner(data: pd.DataFrame, black_list: list) -> pd.DataFrame:
     logging.debug(f"Початкова кількість оголошень: {start_len}")
 
     try:
+
         clean_data = data.copy()
+        
+        if 'id' in clean_data.columns:
+            clean_data.drop_duplicates(subset=['id'], keep='first', inplace=True)
+            clean_data.reset_index(inplace=True,drop=True)
+
+        else:
+            logging.warning("Cleaner отримав некоректний DataFrame, відсутня колонка 'id'.")
+            return pd.DataFrame()
 
         if black_list:
-            clean_data = data[~data['offer_title'].apply(lambda x: is_spam(x, black_list))]    
+            clean_data = data[~data['offer_title'].apply(lambda x: is_spam(x, black_list))]
+            clean_data.reset_index(drop=True, inplace=True)    
         
-        clean_data['price'] = data['price'].apply(clean_price)        
-    
+        clean_data['price'] = clean_data['price'].apply(clean_price)        
+           
     except Exception as e:
         logging.error(f"Помилка при очищенні DataFrame: {e}",exc_info=True)
         return data
@@ -494,23 +504,23 @@ def run_scraper():
             logging.warning("Після очищення даних не залишилося жодного оголошення.")
             return False
 
-       
-        clean_data.reset_index(drop=True, inplace=True)
 
         links = list(clean_data['link'])
+
+        logging.info(f"Отримуємо деталі з кожного оголошення.")
         details_df = get_details(links, headers, target_models, selectors)
 
-        if 'link' in clean_data.columns:
-            clean_data.drop_duplicates(subset=['link'], keep='first', inplace=True)
-            
-        if 'link' in details_df.columns:
-            details_df.drop_duplicates(subset=['link'], keep='first', inplace=True)
+        clean_data.drop_duplicates(subset=['id'], keep='first', inplace=True)
+        details_df.drop_duplicates(subset=['id'], keep='first', inplace=True)
 
+        clean_data.set_index('id', inplace=True)
+        details_df.set_index('id', inplace=True)
 
         cols_to_exclude = ['offer_title', 'price']
+
         clean_data.update(details_df.drop(columns=cols_to_exclude, errors='ignore'))
 
-        clean_data = clean_data.reset_index()
+        clean_data.reset_index(inplace=True)
 
         laptops = clean_data
 
