@@ -22,7 +22,7 @@ To provide the best user experience, the bot features a clean interface and deta
 
 | Main Bot Menu | Hot Deal Notification |
 | :---: | :---: |
-| ![Bot Menu](assets/bot_menu.png) | ![Hot Deal Example](assets/deal_example.jpg) |
+| ![Bot Menu](assets/bot_menu.jpg) | ![Hot Deal Example](assets/deal_example.jpg) |
 
 ## 🛠 Tech Stack
 
