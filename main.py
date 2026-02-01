@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+import os
 from aiogram import Bot
 from tg_bot import dp, notify_users_new_deals
 from analysis_engine import find_hot_deals
@@ -53,6 +54,8 @@ async def scheduled_scraping(laptops: LaptopBase, config: ConfigManager, bot: Bo
 async def main():
     try:
         config = ConfigManager()
+
+        os.makedirs('data', exist_ok=True)
         
         token = config.data.get('token')
         if not token:
