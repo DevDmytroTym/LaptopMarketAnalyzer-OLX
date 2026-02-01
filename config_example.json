@@ -1,0 +1,61 @@
+{
+    "models": [
+        "MacBook Pro M2"
+    ],
+    "blacklist": [
+        "faktura",
+        "rysy",
+        "gwarancja",
+        "na części",
+        "raty",
+        "sklep",
+        "bez pudełka",
+        "wgniecenie",
+        "serwisie komputerowym",
+        "brak ładowarki",
+        "uszkodzony"
+    ],
+    "min_deal_score": 0.15,
+    "max_deal_score": 0.35,
+    "check_interval": 30,
+    "is_paused": false,
+    "url": "https://www.olx.pl/elektronika/komputery/laptopy/q-",
+    "selectors": {
+        "ad_list": {
+            "data-testid": "listing-grid"
+        },
+        "ad_card": {
+            "data-testid": "l-card"
+        },
+        "price": {
+            "data-testid": "ad-price"
+        },
+        "description": {
+            "data-testid": "ad_description"
+        },
+        "date": {
+            "data-testid": "ad-posted-at"
+        },
+        "place": {
+            "data-testid": "map-aside-section"
+        },
+        "ad_params": {
+            "data-testid": "ad-parameters-container"
+        },
+        "ad_card_title": {
+            "data-testid": "ad-card-title"
+        },
+        "offer_title": {
+            "data-testid": "offer_title"
+        },
+        "link": {
+            "data-testid": "ad-link"
+        },
+        "image_url": {
+            "data-testid": "swiper-image"
+        }
+    },
+    "token": "YOUR_TELEGRAM_BOT_TOKEN",
+    "chat_id": "",
+    "path_data": "data/laptops.csv"
+}
